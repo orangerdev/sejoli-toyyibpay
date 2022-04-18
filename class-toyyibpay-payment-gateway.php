@@ -627,14 +627,14 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
             if( true === $is_callback ) :
 
-                if ($args['status_id'] === 1 || $args['status_id'] === '1') {
+                if ( 1 === absint($args['status_id']) || '1' === absint($args['status_id']) ) {
 
-                    $order_id = $args['order_id'];
+                    $order_id = intval($args['order_id']);
 
                     sejolisa_update_order_meta_data($order_id, array(
                         'toyyibpay' => array(
-                            'trans_id' => $args['transaction_id'],
-                            'billcode' => $args['billcode']
+                            'trans_id' => esc_attr($args['transaction_id']),
+                            'billcode' => esc_attr($args['billcode'])
                         )
                     ));
 
@@ -645,14 +645,14 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
                     exit();
 
-                } elseif ($args['status_id'] === 3 || $args['status_id'] === '3') {
+                } elseif (3 === absint($args['status_id']) || '3' === absint($args['status_id'])) {
                     
-                    $order_id = $args['order_id'];
+                    $order_id = intval($args['order_id']);
 
                     sejolisa_update_order_meta_data($order_id, array(
                         'toyyibpay' => array(
-                            'trans_id' => $args['transaction_id'],
-                            'billcode' => $args['billcode']
+                            'trans_id' => esc_attr($args['transaction_id']),
+                            'billcode' => esc_attr($args['billcode'])
                         )
                     ));
 
@@ -663,12 +663,12 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
                     
                 } else {
                     
-                    $order_id = $args['order_id'];
+                    $order_id = intval($args['order_id']);
 
                     sejolisa_update_order_meta_data($order_id, array(
                         'toyyibpay' => array(
-                            'trans_id' => $args['transaction_id'],
-                            'billcode' => $args['billcode']
+                            'trans_id' => esc_attr($args['transaction_id']),
+                            'billcode' => esc_attr($args['billcode'])
                         )
                     ));
 
@@ -722,7 +722,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
             if( true === $is_callback ) :
 
-                if ( $args['status'] === 1 || $args['status'] == '1' ) :
+                if ( 1 === absint($args['status']) || '1' === absint($args['status']) ) :
 
                     $order_id = intval( $args['order_id'] );
                     $response = sejolisa_get_order( array( 'ID' => $order_id ) );
@@ -756,7 +756,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
                     
                     endif;
 
-                elseif ( $args['status'] === 3 || $args['status'] == '3' ) :
+                elseif ( 3 === absint($args['status']) || '3' === absint($args['status']) ) :
 
                     $order_id = intval( $args['order_id'] );
                     $response = sejolisa_get_order( array( 'ID' => $order_id ) );
@@ -849,7 +849,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
             if( 'on-hold' === $order['status'] ) :
                 
-                if( !isset($order['meta_data']['toyyibpay']['billcode']) ){
+                if( !isset( $order['meta_data']['toyyibpay']['billcode'] ) ){
                  
                     $this->prepare_toyyibpay_data( $order );
                 
