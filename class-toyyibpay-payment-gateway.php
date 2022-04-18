@@ -437,7 +437,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
     protected function get_setup_values() {
 
         $mode                = carbon_get_theme_option('toyyibpay_mode');
-        $secreet_key         = trim( carbon_get_theme_option('toyyibpay_secreet_key_'.$mode) );
+        $secret_key          = trim( carbon_get_theme_option('toyyibpay_secreet_key_'.$mode) );
         $category_code       = trim( carbon_get_theme_option('toyyibpay_category_code') );
         $payment_channels    = carbon_get_theme_option('toyyibpay_payment_channel');
         $transaction_charges = carbon_get_theme_option('toyyibpay_transaction_charges');
@@ -446,7 +446,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
         return array(
             'mode'                => $mode,
-            'secreet_key'         => $secreet_key,
+            'secret_key'          => $secret_key,
             'category_code'       => $category_code,
             'payment_channels'    => $payment_channels,
             'transaction_charges' => $transaction_charges,
@@ -492,7 +492,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
         $redirect_url         = $base_url;
         $payment_amount       = (int) $order['grand_total'];
         $merchant_order_ID    = $order['ID'];
-        $signature            = md5( $order['ID'] . $merchant_order_ID . $payment_amount . $api_key );
+        $signature            = md5( $order['ID'] . $merchant_order_ID . $payment_amount . $secret_key );
 
         if( NULL === $data_order ) :
             
@@ -503,46 +503,45 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
             $detail = unserialize( $data_order->detail );
 
             if( !isset( $detail['url'] ) || empty( $detail['url'] ) ) :
-                $request_to_toyyibpaRy = true;
+                $request_to_toyyibpay = true;
             else :
                 $redirect_link = $redirect_url.$detail['BillCode'];
             endif;
 
         endif;
 
+
         if( true === $request_to_toyyibpay ) :
 
             $this->add_to_table( $order['ID'] );
 
-            if ( !empty( $secretkey ) ) {
+            if ( !empty( $secret_key ) ) {
 
                 $params = array(
-                    'body' => array(
-                        'userSecretKey'           => $secret_key,
-                        'categoryCode'            => $category_code,
-                        'billName'                => __('Order No ', 'sejoli-toyyibpay') . $order['ID'],
-                        'billDescription'         => __('Payment for Order No ', 'sejoli-toyyibpay') . $order_id,
-                        'billPriceSetting'        =>  1,
-                        'billPayorInfo'           =>  1,
-                        'billAmount'              =>  $payment_amount * 100,
-                        'billReturnUrl'           =>  add_query_arg(array(
-                                                        'order_id'   => $order['ID'],
-                                                        'unique_key' => $order['meta_data']['toyyibpay']['unique_key']
-                                                    ), site_url('/toyyibpay/return')),
-                        'billCallbackUrl'         =>  add_query_arg(array(
-                                                        'order_id'   => $order['ID'],
-                                                        'unique_key' => $order['meta_data']['toyyibpay']['unique_key']
-                                                    ), site_url('/toyyibpay/process')),
-                        'billExternalReferenceNo' =>  $signature,
-                        'billTo'                  =>  $order['user']->display_name,
-                        'billEmail'               =>  $order['user']->user_email,
-                        'billPhone'               =>  $order['user']->meta->phone,
-                        'billPaymentChannel'      =>  $payment_channels,
-                        'billDisplayMerchant'     =>  1,
-                        'billContentEmail'        =>  $extra_email_content,
-                        'billChargeToCustomer'    =>  $transaction_charges,
-                        'billASPCode'             =>  'toyyibPay-V1-WCV1.3.1'
-                    )
+                    'userSecretKey'           => $secret_key,
+                    'categoryCode'            => $category_code,
+                    'billName'                => __('Order No ', 'sejoli-toyyibpay') . $order['ID'],
+                    'billDescription'         => __('Payment for Order No ', 'sejoli-toyyibpay') . $order['ID'],
+                    'billPriceSetting'        =>  1,
+                    'billPayorInfo'           =>  1,
+                    'billAmount'              =>  1 * 100, //$payment_amount * 100,
+                    'billReturnUrl'           =>  add_query_arg(array(
+                                                    'order_id'   => $order['ID'],
+                                                    'unique_key' => $order['meta_data']['toyyibpay']['unique_key']
+                                                ), site_url('/toyyibpay/return')),
+                    'billCallbackUrl'         =>  add_query_arg(array(
+                                                    'order_id'   => $order['ID'],
+                                                    'unique_key' => $order['meta_data']['toyyibpay']['unique_key']
+                                                ), site_url('/toyyibpay/process')),
+                    'billExternalReferenceNo' =>  $order['ID'],
+                    'billTo'                  =>  $order['user']->display_name,
+                    'billEmail'               =>  $order['user']->user_email,
+                    'billPhone'               =>  $order['user']->meta->phone,
+                    'billPaymentChannel'      =>  $payment_channels,
+                    'billDisplayMerchant'     =>  1,
+                    'billContentEmail'        =>  $extra_email_content,
+                    'billChargeToCustomer'    =>  $transaction_charges,
+                    'billASPCode'             =>  'toyyibPay-V1-WCV1.3.1'
                 );
 
                 $executeTransaction = $this->executeTransaction( $request_url, $params );
@@ -574,7 +573,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
                     if ( $msg === NULL ) {
                         
                         wp_die(
-                            __('Error!<br>Please check the following : ' . $executeTransaction, 'sejoli-toyyibpay'),
+                            __('Error!<br>Please check the following : ' . $executeTransaction[0], 'sejoli-toyyibpay'),
                             __('Error!', 'sejoli-toyyibpay')
                         );
 
@@ -628,21 +627,57 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
             if( true === $is_callback ) :
 
-                if ( $args['status_id'] === 1 || $args['status_id'] == '1' ) :
+                if ( 1 === absint($args['status_id']) ) {
 
-                    $order_id = intval( $args['order_id'] );
+                    $order_id = intval($args['order_id']);
 
                     sejolisa_update_order_meta_data($order_id, array(
                         'toyyibpay' => array(
-                            'trans_id' => $args['transaction_id']
+                            'trans_id' => esc_attr($args['transaction_id']),
+                            'billcode' => esc_attr($args['billcode'])
                         )
                     ));
 
                     wp_redirect(add_query_arg(array(
-                        'order_id' => $order_id
+                        'order_id' => $order_id,
+                        'status'   => "success"
                     ), site_url('checkout/thank-you')));
 
-                endif;
+                    exit();
+
+                } elseif ( 3 === absint($args['status_id']) ) {
+                    
+                    $order_id = intval($args['order_id']);
+
+                    sejolisa_update_order_meta_data($order_id, array(
+                        'toyyibpay' => array(
+                            'trans_id' => esc_attr($args['transaction_id']),
+                            'billcode' => esc_attr($args['billcode'])
+                        )
+                    ));
+
+                    wp_redirect(add_query_arg(array(
+                        'order_id' => $order_id,
+                        'status'   => "failed"
+                    ), site_url('checkout/thank-you')));
+                    
+                } else {
+                    
+                    $order_id = intval($args['order_id']);
+
+                    sejolisa_update_order_meta_data($order_id, array(
+                        'toyyibpay' => array(
+                            'trans_id' => esc_attr($args['transaction_id']),
+                            'billcode' => esc_attr($args['billcode'])
+                        )
+                    ));
+
+                    wp_redirect(add_query_arg(array(
+                        'order_id' => $order_id,
+                        'status'   => "pending"
+                    ), site_url('checkout/thank-you')));
+
+                }
 
             endif;
         
@@ -664,21 +699,21 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
         $setup = $this->get_setup_values();
 
         $args = wp_parse_args($_GET, array(
-            'order_id'         => NULL,
+            'refno'            => NULL,
+            'status'           => NULL,
+            'reason'           => NULL,
             'billcode'         => NULL,
             'order_id'         => NULL,
-            'reason'           => NULL,
-            'refno'            => NULL,
             'amount'           => NULL,
             'transaction_time' => NULL
         ));
 
         if(
-            !empty( $args['order_id'] ) &&
+            !empty( $args['refno'] ) &&
+            !empty( $args['status'] ) &&
+            !empty( $args['reason'] ) &&
             !empty( $args['billcode'] ) &&
             !empty( $args['order_id'] ) &&
-            !empty( $args['reason'] ) &&
-            !empty( $args['refno'] ) &&
             !empty( $args['amount'] ) &&
             !empty( $args['transaction_time'] )
         ) :
@@ -687,7 +722,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
             if( true === $is_callback ) :
 
-                if ( $args['status_id'] === 1 || $args['status_id'] == '1' ) :
+                if ( 1 === absint($args['status']) ) :
 
                     $order_id = intval( $args['order_id'] );
                     $response = sejolisa_get_order( array( 'ID' => $order_id ) );
@@ -704,7 +739,68 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
                             $status = 'completed';
                         endif;
 
-                        $this->update_order_status( $order['ID'] );
+                        $update_status_order = wp_parse_args($args, [
+                            'ID'     => $order_id,
+                            'status' => $status
+                        ]);
+
+                        sejolisa_update_order_status($update_status_order);
+
+                        $args['status'] = $status;
+
+                        do_action( 'sejoli/log/write', 'toyyibpay-update-order', $args );
+
+                    else :
+
+                        do_action( 'sejoli/log/write', 'toyyibpay-wrong-order', $args );
+                    
+                    endif;
+
+                elseif ( 3 === absint($args['status']) ) :
+
+                    $order_id = intval( $args['order_id'] );
+                    $response = sejolisa_get_order( array( 'ID' => $order_id ) );
+
+                    if( false !== $response['valid'] ) :
+
+                        $order   = $response['orders'];
+                        $product = $order['product'];
+                        $status  = 'cancelled';
+
+                        $update_status_order = wp_parse_args($args, [
+                            'ID'     => $order_id,
+                            'status' => $status
+                        ]);
+
+                        sejolisa_update_order_status($update_status_order);
+
+                        $args['status'] = $status;
+
+                        do_action( 'sejoli/log/write', 'toyyibpay-update-order', $args );
+
+                    else :
+
+                        do_action( 'sejoli/log/write', 'toyyibpay-wrong-order', $args );
+                    
+                    endif;
+
+                else:
+
+                    $order_id = intval( $args['order_id'] );
+                    $response = sejolisa_get_order( array( 'ID' => $order_id ) );
+
+                    if( false !== $response['valid'] ) :
+
+                        $order   = $response['orders'];
+                        $product = $order['product'];
+                        $status  = 'on-hold';
+
+                        $update_status_order = wp_parse_args($args, [
+                            'ID'     => $order_id,
+                            'status' => $status
+                        ]);
+
+                        sejolisa_update_order_status($update_status_order);
 
                         $args['status'] = $status;
 
@@ -742,6 +838,10 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
      */
     public function check_for_redirect( array $order ) {
 
+        extract( $this->get_setup_values() );
+        
+        $redirect_url = $base_url.$order['meta_data']['toyyibpay']['billcode'];
+
         if(
             isset( $order['payment_info']['bank'] ) &&
             'TOYYIBPAY' === strtoupper( $order['payment_info']['bank'] )
@@ -749,7 +849,17 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
             if( 'on-hold' === $order['status'] ) :
                 
-                $this->prepare_toyyibpay_data( $order );
+                if( !isset( $order['meta_data']['toyyibpay']['billcode'] ) ){
+                 
+                    $this->prepare_toyyibpay_data( $order );
+                
+                } else {
+
+                    wp_redirect( $redirect_url );
+                    
+                    exit;
+                
+                }
 
             elseif( in_array( $order['status'], array( 'refunded', 'cancelled' ) ) ) :
 
@@ -840,8 +950,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
         
         $result = wp_remote_post($request_url, array(
             'headers' => array(
-                            "Content-type"   => "application/x-www-form-urlencoded;charset=UTF-8",
-                            "Authentication" => $token
+                            "Content-type" => "application/x-www-form-urlencoded;charset=UTF-8",
                         ),
             'body'    => $params,
             'timeout' => 300
