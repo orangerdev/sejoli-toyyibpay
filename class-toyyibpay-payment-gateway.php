@@ -627,7 +627,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
             if( true === $is_callback ) :
 
-                if ( 1 === absint($args['status_id']) || '1' === absint($args['status_id']) ) {
+                if ( 1 === absint($args['status_id']) ) {
 
                     $order_id = intval($args['order_id']);
 
@@ -645,7 +645,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
                     exit();
 
-                } elseif (3 === absint($args['status_id']) || '3' === absint($args['status_id'])) {
+                } elseif ( 3 === absint($args['status_id']) ) {
                     
                     $order_id = intval($args['order_id']);
 
@@ -722,7 +722,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
             if( true === $is_callback ) :
 
-                if ( 1 === absint($args['status']) || '1' === absint($args['status']) ) :
+                if ( 1 === absint($args['status']) ) :
 
                     $order_id = intval( $args['order_id'] );
                     $response = sejolisa_get_order( array( 'ID' => $order_id ) );
@@ -756,7 +756,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
                     
                     endif;
 
-                elseif ( 3 === absint($args['status']) || '3' === absint($args['status']) ) :
+                elseif ( 3 === absint($args['status']) ) :
 
                     $order_id = intval( $args['order_id'] );
                     $response = sejolisa_get_order( array( 'ID' => $order_id ) );
