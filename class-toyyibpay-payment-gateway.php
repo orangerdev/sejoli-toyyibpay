@@ -524,7 +524,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
                     'billDescription'         => __('Payment for Order No ', 'sejoli-toyyibpay') . $order['ID'],
                     'billPriceSetting'        =>  1,
                     'billPayorInfo'           =>  1,
-                    'billAmount'              =>  1 * 100, //$payment_amount * 100,
+                    'billAmount'              =>  $payment_amount * 100,
                     'billReturnUrl'           =>  add_query_arg(array(
                                                     'order_id'   => $order['ID'],
                                                     'unique_key' => $order['meta_data']['toyyibpay']['unique_key']
