@@ -9,7 +9,7 @@
  * Plugin Name:       Sejoli - TOYYIBPAY Payment Gateway
  * Plugin URI:        https://sejoli.co.id
  * Description:       Integrate Sejoli Premium WordPress Membership Plugin with TOYYIBPAY Payment Gateway.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires PHP: 	  7.4.1
  * Author:            Sejoli
  * Author URI:        https://sejoli.co.id
@@ -21,6 +21,34 @@
 if ( ! defined( 'WPINC' ) ) {
 
 	die;
+
+}
+
+/**
+ * Currently plugin version.
+ * Start at version 1.0.0 and use SemVer - https://semver.org
+ * Rename this for your plugin and update it as you release new versions.
+ */
+define( 'SEJOLI_TOYYIBPAY_VERSION',    '1.0.1' );
+define( 'SEJOLI_TOYYIBPAY_DIR',        plugin_dir_path( __FILE__ ) );
+define( 'SEJOLI_TOYYIBPAY_URL',        plugin_dir_url( __FILE__ ) );
+
+add_action('muplugins_loaded', 'sejoli_toyyibpay_check_sejoli');
+
+function sejoli_toyyibpay_check_sejoli() {
+
+    if(!defined('SEJOLISA_VERSION')) :
+
+        add_action('admin_notices', 'sejoli_toyyibpay_no_sejoli_functions');
+
+        function sejoli_toyyibpay_no_sejoli_functions() {
+            ?><div class='notice notice-error'>
+            <p><?php _e('Anda belum menginstall atau mengaktifkan SEJOLI terlebih dahulu.', 'sejoli-toyyibpay'); ?></p>
+            </div><?php
+        }
+
+        return;
+    endif;
 
 }
 
