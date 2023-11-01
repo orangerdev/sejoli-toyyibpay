@@ -440,7 +440,18 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
         $secret_key          = trim( carbon_get_theme_option('toyyibpay_secreet_key_'.$mode) );
         $category_code       = trim( carbon_get_theme_option('toyyibpay_category_code') );
         $payment_channels    = carbon_get_theme_option('toyyibpay_payment_channel');
-        $transaction_charges = carbon_get_theme_option('toyyibpay_transaction_charges');
+        $get_transaction_charges = carbon_get_theme_option('toyyibpay_transaction_charges');
+
+        if ($get_transaction_charges === "0") :
+            $transaction_charges = '';
+        elseif ($get_transaction_charges === "1") :
+            $transaction_charges = '0';
+        elseif ($get_transaction_charges === "2") :
+            $transaction_charges = '1';
+        else:
+            $transaction_charges = '2';
+        endif;
+
         $extra_email_content = carbon_get_theme_option('toyyibpay_extra_email_content');
         $base_url            = $this->base_url[$mode];
 
@@ -515,7 +526,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
             $this->add_to_table( $order['ID'] );
 
-            if ( !empty( $secret_key ) ) {
+            if ( !empty( $secret_key ) ) :
 
                 $params = array(
                     'userSecretKey'           => $secret_key,
@@ -547,15 +558,15 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
                 $executeTransaction = $this->executeTransaction( $request_url, $params );
                 $billCode           = $executeTransaction[0]['BillCode'];
 
-                if ( $billCode !== NULL ) {
+                if ( $billCode !== NULL ) :
 
                     $http_code = 200;
 
-                } else {
+                else:
                     
                     $http_code = 400;
                 
-                }
+                endif;
 
                 if( 200 === $http_code ) :
 
@@ -570,27 +581,27 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
                     $msg = $executeTransaction[0]['msg'];
 
-                    if ( $msg === NULL ) {
+                    if ( $msg === NULL ) :
                         
                         wp_die(
                             __('Error!<br>Please check the following : ' . $executeTransaction[0], 'sejoli-toyyibpay'),
                             __('Error!', 'sejoli-toyyibpay')
                         );
 
-                    } else {
+                    else:
                         
                         wp_die(
                             __('Error!<br>Please check the following : ' . $msg, 'sejoli-toyyibpay'),
                             __('Error!', 'sejoli-toyyibpay')
                         );
                         
-                    }
+                    endif;
 
                     exit;
             
                 endif;
 
-            }
+            endif;
 
         endif;
 
@@ -627,7 +638,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
             if( true === $is_callback ) :
 
-                if ( 1 === absint($args['status_id']) ) {
+                if ( 1 === absint($args['status_id']) ) :
 
                     $order_id = intval($args['order_id']);
 
@@ -645,7 +656,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
                     exit();
 
-                } elseif ( 3 === absint($args['status_id']) ) {
+                elseif ( 3 === absint($args['status_id']) ) :
                     
                     $order_id = intval($args['order_id']);
 
@@ -661,7 +672,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
                         'status'   => "failed"
                     ), site_url('checkout/thank-you')));
                     
-                } else {
+                else:
                     
                     $order_id = intval($args['order_id']);
 
@@ -677,7 +688,7 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
                         'status'   => "pending"
                     ), site_url('checkout/thank-you')));
 
-                }
+                endif;
 
             endif;
         
@@ -840,7 +851,8 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
         extract( $this->get_setup_values() );
         
-        $redirect_url = $base_url.$order['meta_data']['toyyibpay']['billcode'];
+        $billcode = isset($order['meta_data']['toyyibpay']['billcode']) ? $order['meta_data']['toyyibpay']['billcode'] : null;
+        $redirect_url = $base_url.$billcode;
 
         if(
             isset( $order['payment_info']['bank'] ) &&
@@ -849,17 +861,17 @@ final class SejoliToyyibpay extends \SejoliSA\Payment{
 
             if( 'on-hold' === $order['status'] ) :
                 
-                if( !isset( $order['meta_data']['toyyibpay']['billcode'] ) ){
+                if( !isset( $billcode ) ) :
                  
                     $this->prepare_toyyibpay_data( $order );
                 
-                } else {
+                else:
 
                     wp_redirect( $redirect_url );
                     
                     exit;
                 
-                }
+                endif;
 
             elseif( in_array( $order['status'], array( 'refunded', 'cancelled' ) ) ) :
 
